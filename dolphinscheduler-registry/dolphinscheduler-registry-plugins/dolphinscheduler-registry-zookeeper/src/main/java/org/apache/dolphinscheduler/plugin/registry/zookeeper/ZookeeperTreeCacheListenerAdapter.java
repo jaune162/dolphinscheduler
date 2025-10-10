@@ -26,6 +26,9 @@ import org.apache.curator.framework.recipes.cache.ChildData;
 import org.apache.curator.framework.recipes.cache.TreeCacheEvent;
 import org.apache.curator.framework.recipes.cache.TreeCacheListener;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class ZookeeperTreeCacheListenerAdapter implements TreeCacheListener {
 
     private final String watchedPath;
@@ -39,6 +42,10 @@ public class ZookeeperTreeCacheListenerAdapter implements TreeCacheListener {
 
     @Override
     public void childEvent(final CuratorFramework curatorFramework, final TreeCacheEvent event) {
+        if (event.getData() == null) {
+            log.debug("event data is null, type {}", event.getType());
+            return;
+        }
         final String eventPath = event.getData().getPath();
         switch (listener.getSubscribeScope()) {
             case PATH_ONLY:

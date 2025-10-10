@@ -155,7 +155,7 @@ final class ZookeeperRegistry implements Registry {
         try {
             return new String(client.getData().forPath(key), StandardCharsets.UTF_8);
         } catch (Exception e) {
-            throw new RegistryException("zookeeper get data error", e);
+            throw new RegistryException("zookeeper get data error:" + key, e);
         }
     }
 
@@ -164,7 +164,7 @@ final class ZookeeperRegistry implements Registry {
         try {
             return null != client.checkExists().forPath(key);
         } catch (Exception e) {
-            throw new RegistryException("zookeeper check key is existed error", e);
+            throw new RegistryException("zookeeper check key is existed error:" + key, e);
         }
     }
 
@@ -190,7 +190,7 @@ final class ZookeeperRegistry implements Registry {
             result.sort(Comparator.reverseOrder());
             return result;
         } catch (Exception e) {
-            throw new RegistryException("zookeeper get children error", e);
+            throw new RegistryException("zookeeper get children error:" + key, e);
         }
     }
 
@@ -287,7 +287,7 @@ final class ZookeeperRegistry implements Registry {
                 threadLocalLockMap.remove();
             }
         } catch (Exception e) {
-            throw new RegistryException("zookeeper release lock error", e);
+            throw new RegistryException("zookeeper release lock error:" + key, e);
         }
         return true;
     }

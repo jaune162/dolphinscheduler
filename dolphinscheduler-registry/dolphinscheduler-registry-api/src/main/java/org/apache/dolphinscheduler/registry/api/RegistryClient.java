@@ -243,9 +243,11 @@ public class RegistryClient {
         }
         for (final String failoverFinishedNode : failoverFinishedNodes) {
             try {
-                final String failoverFinishTime = registry.get(failoverFinishedNode);
+                String ffNodeFull =
+                        RegistryNodeType.FAILOVER_FINISH_NODES.getRegistryPath() + "/" + failoverFinishedNode;
+                final String failoverFinishTime = registry.get(ffNodeFull);
                 if (System.currentTimeMillis() - Long.parseLong(failoverFinishTime) > TimeUnit.DAYS.toMillis(7)) {
-                    registry.delete(failoverFinishedNode);
+                    registry.delete(ffNodeFull);
                     log.info(
                             "Clear the failover finished node: {} which failover time is before the current time minus 1 week",
                             failoverFinishedNode);
