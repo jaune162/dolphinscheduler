@@ -350,8 +350,11 @@ public abstract class AbstractCommandExecutor {
             try (BufferedReader inReader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 String line;
                 while ((line = inReader.readLine()) != null) {
+                    logger.info("var line: {}", line);
                     if (line.startsWith("${setValue(") || line.startsWith("#{setValue(")) {
-                        varPool.append(findVarPool(line));
+                        String v1 = findVarPool(line);
+                        logger.info("found var: {}", v1);
+                        varPool.append(v1);
                         varPool.append("$VarPool$");
                     } else {
                         logBuffer.add(line);
@@ -365,7 +368,6 @@ public abstract class AbstractCommandExecutor {
             }
         });
 
-        getOutputLogService.shutdown();
 
         ExecutorService parseProcessOutputExecutorService = newDaemonSingleThreadExecutor(threadLoggerInfoName);
         parseProcessOutputExecutorService.submit(() -> {
@@ -385,7 +387,15 @@ public abstract class AbstractCommandExecutor {
                 clear();
             }
         });
+        try {
+            getOutputLogService.awaitTermination(60, TimeUnit.SECONDS);
+            parseProcessOutputExecutorService.awaitTermination(60, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        getOutputLogService.shutdown();
         parseProcessOutputExecutorService.shutdown();
+
     }
 
     /**
