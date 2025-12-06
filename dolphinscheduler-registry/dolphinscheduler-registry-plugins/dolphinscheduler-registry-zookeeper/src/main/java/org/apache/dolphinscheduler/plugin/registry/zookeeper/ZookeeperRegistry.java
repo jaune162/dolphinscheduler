@@ -233,7 +233,7 @@ public final class ZookeeperRegistry implements Registry {
 
     @Override
     public boolean releaseLock(String key) {
-        if (null == threadLocalLockMap.get().get(key)) {
+        if (null == threadLocalLockMap.get() || null == threadLocalLockMap.get().get(key)) {
             return false;
         }
         try {
