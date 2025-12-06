@@ -20,6 +20,7 @@ package org.apache.dolphinscheduler.service.expand;
 import static org.apache.dolphinscheduler.plugin.task.api.TaskConstants.PARAMETER_TASK_EXECUTE_PATH;
 import static org.apache.dolphinscheduler.plugin.task.api.TaskConstants.PARAMETER_TASK_INSTANCE_ID;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.dolphinscheduler.common.constants.Constants;
 import org.apache.dolphinscheduler.common.constants.DateConstants;
 import org.apache.dolphinscheduler.common.enums.CommandType;
@@ -36,12 +37,7 @@ import org.apache.dolphinscheduler.plugin.task.api.utils.ParameterUtils;
 
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import lombok.NonNull;
@@ -49,6 +45,7 @@ import lombok.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 public class CuringGlobalParams implements CuringParamsService {
 
@@ -138,6 +135,7 @@ public class CuringGlobalParams implements CuringParamsService {
                                                          @NonNull ProcessInstance processInstance) {
         // assign value to definedParams here
         Map<String, String> globalParamsMap = setGlobalParamsMap(processInstance);
+        Map<String, Property> mixedParams =  new LinkedHashMap<>();
         Map<String, Property> globalParams = ParamUtils.getUserDefParamsMap(globalParamsMap);
         CommandType commandType = processInstance.getCmdTypeIfComplement();
         Date scheduleTime = processInstance.getScheduleTime();
@@ -149,7 +147,7 @@ public class CuringGlobalParams implements CuringParamsService {
         parameters.setVarPool(taskInstance.getVarPool());
         Map<String, Property> varParams = parameters.getVarPoolMap();
 
-        if (MapUtils.isEmpty(globalParams) && MapUtils.isEmpty(localParams) && MapUtils.isEmpty(varParams)) {
+        if (MapUtils.isEmpty(mixedParams) && MapUtils.isEmpty(localParams) && MapUtils.isEmpty(varParams)) {
             return null;
         }
         // if it is a complement,
@@ -169,13 +167,19 @@ public class CuringGlobalParams implements CuringParamsService {
         params.put(PARAMETER_TASK_INSTANCE_ID, Integer.toString(taskInstance.getId()));
 
         if (MapUtils.isNotEmpty(varParams)) {
-            globalParams.putAll(varParams);
+            log.debug("varParams: {}", varParams);
+            mixedParams.putAll(varParams);
         }
         if (MapUtils.isNotEmpty(localParams)) {
-            globalParams.putAll(localParams);
+            log.debug("localParams: {}", localParams);
+            mixedParams.putAll(localParams);
         }
-
-        Iterator<Map.Entry<String, Property>> iter = globalParams.entrySet().iterator();
+        if (MapUtils.isNotEmpty(globalParams)) {
+            log.debug("globalParams: {}", globalParams);
+            mixedParams.putAll(globalParams);
+        }
+        log.info("mixedParams: {}", mixedParams);
+        Iterator<Map.Entry<String, Property>> iter = mixedParams.entrySet().iterator();
         while (iter.hasNext()) {
             Map.Entry<String, Property> en = iter.next();
             Property property = en.getValue();
@@ -197,15 +201,15 @@ public class CuringGlobalParams implements CuringParamsService {
                 property.setValue(val);
             }
         }
-        if (MapUtils.isEmpty(globalParams)) {
-            globalParams = new HashMap<>();
+        if (MapUtils.isEmpty(mixedParams)) {
+            mixedParams = new HashMap<>();
         }
         // put schedule time param to params map
         Map<String, Property> paramsMap = preBuildBusinessParams(processInstance);
         if (MapUtils.isNotEmpty(paramsMap)) {
-            globalParams.putAll(paramsMap);
+            mixedParams.putAll(paramsMap);
         }
-        return globalParams;
+        return mixedParams;
     }
 
     private Map<String, String> setGlobalParamsMap(ProcessInstance processInstance) {
