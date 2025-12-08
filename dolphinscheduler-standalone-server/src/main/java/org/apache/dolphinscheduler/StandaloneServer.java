@@ -36,6 +36,7 @@ public class StandaloneServer {
             System.setProperty("registry.zookeeper.connect-string", zookeeperServer.getConnectString());
             SpringApplication.run(StandaloneServer.class, args);
         } catch (Exception ex) {
+            ex.printStackTrace();
             log.error("StandaloneServer start failed", ex);
             System.exit(1);
         }
