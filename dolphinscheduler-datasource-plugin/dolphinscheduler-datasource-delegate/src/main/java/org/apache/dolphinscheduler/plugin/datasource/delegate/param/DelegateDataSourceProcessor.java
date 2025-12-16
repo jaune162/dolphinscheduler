@@ -44,10 +44,7 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 @AutoService(DataSourceProcessor.class)
 @Slf4j
@@ -90,8 +87,10 @@ public class DelegateDataSourceProcessor extends AbstractDataSourceProcessor {
         }
         DataSource dataSource = dataSources.get(0);
 
-        return  (BaseConnectionParam) DataSourceUtils.buildConnectionParams(dataSource.getType(),
+        BaseConnectionParam baseConnectionParam = (BaseConnectionParam) DataSourceUtils.buildConnectionParams(dataSource.getType(),
                 dataSource.getConnectionParams());
+        baseConnectionParam.setDbType(dataSource.getType());
+        return baseConnectionParam;
     }
 
     @Override
@@ -138,28 +137,11 @@ public class DelegateDataSourceProcessor extends AbstractDataSourceProcessor {
     @Override
     public Connection getConnection(ConnectionParam connectionParam) throws ClassNotFoundException, SQLException, IOException {
         if (connectionParam instanceof BaseConnectionParam) {
-            DataSourceProcessor dataSourceProcessor = this.getDelegateDataSourceProcessor(connectionParam.getClass().getName());
+            BaseConnectionParam baseConnectionParam = (BaseConnectionParam) connectionParam;
+            DataSourceProcessor dataSourceProcessor = DataSourceProcessorProvider.getDataSourceProcessor(baseConnectionParam.getDbType());
             return dataSourceProcessor.getConnection(connectionParam);
         }
         throw new RuntimeException("invalid connection parameter");
-    }
-
-    // Detect DataSourceProcessor by class name
-    private DataSourceProcessor getDelegateDataSourceProcessor(String clazzName) {
-        if (Objects.equals(clazzName, "org.apache.dolphinscheduler.plugin.datasource.postgresql.param.PostgreSQLConnectionParam")) {
-            return DataSourceProcessorProvider.getDataSourceProcessor(DbType.POSTGRESQL);
-        } else if (Objects.equals(clazzName, "org.apache.dolphinscheduler.plugin.datasource.mysql.param.MySQLConnectionParam")) {
-            return DataSourceProcessorProvider.getDataSourceProcessor(DbType.MYSQL);
-        } else if (Objects.equals(clazzName, "org.apache.dolphinscheduler.plugin.datasource.oracle.param.OracleConnectionParam")) {
-            return DataSourceProcessorProvider.getDataSourceProcessor(DbType.ORACLE);
-        } else if (Objects.equals(clazzName, "org.apache.dolphinscheduler.plugin.datasource.hive.param.HiveConnectionParam")) {
-            return DataSourceProcessorProvider.getDataSourceProcessor(DbType.HIVE);
-        } else if (Objects.equals(clazzName, "org.apache.dolphinscheduler.plugin.datasource.spark.param.SparkConnectionParam")) {
-            return DataSourceProcessorProvider.getDataSourceProcessor(DbType.SPARK);
-        } else if (Objects.equals(clazzName, "org.apache.dolphinscheduler.plugin.datasource.sqlserver.param.SQLServerConnectionParam")) {
-            return DataSourceProcessorProvider.getDataSourceProcessor(DbType.SQLSERVER);
-        }
-        throw new IllegalArgumentException("unknown datasource type:" + clazzName);
     }
 
     @Override
