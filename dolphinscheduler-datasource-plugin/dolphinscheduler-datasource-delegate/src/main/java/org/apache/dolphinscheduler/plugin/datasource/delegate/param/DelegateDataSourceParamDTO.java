@@ -30,6 +30,6 @@ public class DelegateDataSourceParamDTO extends BaseDataSourceParamDTO {
 
     @Override
     public DbType getType() {
-        return DbType.MYSQL;
+        return DbType.DELEGATE;
     }
 }

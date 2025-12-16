@@ -121,7 +121,7 @@ export function useForm(id?: number) {
         validator() {
           if (
             !state.detailForm.userName &&
-            state.detailForm.type !== 'AZURESQL'
+            state.detailForm.type !== 'AZURESQL' && state.detailForm.type !== 'DELEGATE'
           ) {
             return new Error(t('datasource.user_name_tips'))
           }

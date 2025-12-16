@@ -20,6 +20,8 @@ package org.apache.dolphinscheduler.plugin.datasource.delegate.param;
 import com.google.auto.service.AutoService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.dolphinscheduler.common.context.GlobalParametersContext;
+import org.apache.dolphinscheduler.common.utils.ApplicationContextUtils;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.dao.entity.DataSource;
 import org.apache.dolphinscheduler.dao.mapper.DataSourceMapper;
@@ -31,19 +33,29 @@ import org.apache.dolphinscheduler.plugin.datasource.api.utils.DataSourceUtils;
 import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
 import org.apache.dolphinscheduler.spi.datasource.ConnectionParam;
 import org.apache.dolphinscheduler.spi.enums.DbType;
+import org.springframework.beans.factory.BeanInitializationException;
+import org.springframework.context.expression.MapAccessor;
+import org.springframework.expression.Expression;
+import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.common.TemplateParserContext;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 @AutoService(DataSourceProcessor.class)
 @Slf4j
 public class DelegateDataSourceProcessor extends AbstractDataSourceProcessor {
 
-    DataSourceMapper dataSourceMapper;
-    BaseConnectionParam realConnectionParam;
-    private DataSourceProcessor dataSourceProcessor;
+    public DelegateDataSourceProcessor() {
+        log.info("DelegateDataSourceProcessor created");
+    }
 
     @Override
     public BaseDataSourceParamDTO castDatasourceParamDTO(String paramJson) {
@@ -52,42 +64,34 @@ public class DelegateDataSourceProcessor extends AbstractDataSourceProcessor {
 
     @Override
     public BaseDataSourceParamDTO createDatasourceParamDTO(String connectionJson) {
-        DelegateConnectionParam connectionParams = (DelegateConnectionParam) createConnectionParams(connectionJson);
-        DelegateDataSourceParamDTO datasourceParamDTO = new DelegateDataSourceParamDTO();
-
-        datasourceParamDTO.setRealDatasource(connectionParams.getRealDatasource());
-
-        return datasourceParamDTO;
+        return JSONUtils.parseObject(connectionJson, DelegateDataSourceParamDTO.class);
     }
 
     @Override
     public BaseConnectionParam createConnectionParams(BaseDataSourceParamDTO dataSourceParam) {
         DelegateDataSourceParamDTO datasourceParam = (DelegateDataSourceParamDTO) dataSourceParam;
         String realDatasource = datasourceParam.getRealDatasource();
-        BaseConnectionParam connectionParam = toRealConnectionParam(realDatasource);
-        return connectionParam;
+        return toRealConnectionParam(realDatasource);
     }
 
     private BaseConnectionParam toRealConnectionParam(String realDatasource) {
-        if (realConnectionParam != null) {
-            return realConnectionParam;
-        }
-        if (realDatasource.matches("^\\$\\{.+\\}")) {
-            //resolve var
+        DataSourceMapper dataSourceMapper = ApplicationContextUtils.getBean(DataSourceMapper.class);
+        if (dataSourceMapper == null) {
+            throw new BeanInitializationException("Spring context is not initialized");
         }
 
-        List<DataSource> dataSources = dataSourceMapper.queryDataSourceByName(realDatasource);
+        String datasourceName = this.resolveRealDatasourceName(realDatasource);
+
+        List<DataSource> dataSources = dataSourceMapper.queryDataSourceByName(datasourceName);
         if (dataSources == null || dataSources.isEmpty()) {
-            throw new RuntimeException("datasource not found:" + realDatasource);
+            throw new RuntimeException("datasource not found:" + datasourceName);
         } else if (dataSources.size() > 1) {
-            throw new RuntimeException("need one datasource for:" + realDatasource + ", while got:" + dataSources);
+            throw new RuntimeException("need one datasource for:" + datasourceName + ", while got:" + datasourceName);
         }
         DataSource dataSource = dataSources.get(0);
 
-        BaseConnectionParam connectionParam = (BaseConnectionParam) DataSourceUtils.buildConnectionParams(dataSource.getType(),
+        return  (BaseConnectionParam) DataSourceUtils.buildConnectionParams(dataSource.getType(),
                 dataSource.getConnectionParams());
-        dataSourceProcessor = DataSourceProcessorProvider.getDataSourceProcessor(dataSource.getType());
-        return realConnectionParam = connectionParam;
     }
 
     @Override
@@ -106,18 +110,56 @@ public class DelegateDataSourceProcessor extends AbstractDataSourceProcessor {
         return null;
     }
 
+
+    private String resolveRealDatasourceName(String realDatasource) {
+        if (realDatasource.matches("^\\$\\{.+\\}")) {
+            //resolve var
+            TemplateParserContext parserContext = new TemplateParserContext("${", "}");
+
+            ExpressionParser parser = new SpelExpressionParser();
+            StandardEvaluationContext context = new StandardEvaluationContext(GlobalParametersContext.getParameters());
+            context.addPropertyAccessor(new MapAccessor());
+            // var context
+            Expression expression = parser.parseExpression(realDatasource, parserContext);
+            return expression.getValue(context, String.class);
+        } else {
+            return realDatasource;
+        }
+    }
+
     @Override
     public String getJdbcUrl(ConnectionParam connectionParam) {
-        DelegateConnectionParam connectionParam1 = (DelegateConnectionParam) connectionParam;
-        BaseConnectionParam realConnectionParam = toRealConnectionParam(connectionParam1.getRealDatasource());
-//        createConnectionParams()
-        return realConnectionParam.getJdbcUrl();
+        if (connectionParam instanceof BaseConnectionParam) {
+            return ((BaseConnectionParam) connectionParam).getJdbcUrl();
+        }
+        throw new RuntimeException("invalid connection parameter");
     }
 
     @Override
     public Connection getConnection(ConnectionParam connectionParam) throws ClassNotFoundException, SQLException, IOException {
-        DelegateConnectionParam delegateConnectionParam = (DelegateConnectionParam) connectionParam;
-        return dataSourceProcessor.getConnection(toRealConnectionParam(delegateConnectionParam.getRealDatasource()));
+        if (connectionParam instanceof BaseConnectionParam) {
+            DataSourceProcessor dataSourceProcessor = this.getDelegateDataSourceProcessor(connectionParam.getClass().getName());
+            return dataSourceProcessor.getConnection(connectionParam);
+        }
+        throw new RuntimeException("invalid connection parameter");
+    }
+
+    // Detect DataSourceProcessor by class name
+    private DataSourceProcessor getDelegateDataSourceProcessor(String clazzName) {
+        if (Objects.equals(clazzName, "org.apache.dolphinscheduler.plugin.datasource.postgresql.param.PostgreSQLConnectionParam")) {
+            return DataSourceProcessorProvider.getDataSourceProcessor(DbType.POSTGRESQL);
+        } else if (Objects.equals(clazzName, "org.apache.dolphinscheduler.plugin.datasource.mysql.param.MySQLConnectionParam")) {
+            return DataSourceProcessorProvider.getDataSourceProcessor(DbType.MYSQL);
+        } else if (Objects.equals(clazzName, "org.apache.dolphinscheduler.plugin.datasource.oracle.param.OracleConnectionParam")) {
+            return DataSourceProcessorProvider.getDataSourceProcessor(DbType.ORACLE);
+        } else if (Objects.equals(clazzName, "org.apache.dolphinscheduler.plugin.datasource.hive.param.HiveConnectionParam")) {
+            return DataSourceProcessorProvider.getDataSourceProcessor(DbType.HIVE);
+        } else if (Objects.equals(clazzName, "org.apache.dolphinscheduler.plugin.datasource.spark.param.SparkConnectionParam")) {
+            return DataSourceProcessorProvider.getDataSourceProcessor(DbType.SPARK);
+        } else if (Objects.equals(clazzName, "org.apache.dolphinscheduler.plugin.datasource.sqlserver.param.SQLServerConnectionParam")) {
+            return DataSourceProcessorProvider.getDataSourceProcessor(DbType.SQLSERVER);
+        }
+        throw new IllegalArgumentException("unknown datasource type:" + clazzName);
     }
 
     @Override
@@ -130,10 +172,6 @@ public class DelegateDataSourceProcessor extends AbstractDataSourceProcessor {
         return new DelegateDataSourceProcessor();
     }
 
-    @Override
-    public List<String> splitAndRemoveComment(String sql) {
-        return dataSourceProcessor.splitAndRemoveComment(sql);
-    }
     @Override
     public void checkDatasourceParam(BaseDataSourceParamDTO datasourceParamDTO) {
         DelegateDataSourceParamDTO dlgDataSourceParamDTO = (DelegateDataSourceParamDTO) datasourceParamDTO;

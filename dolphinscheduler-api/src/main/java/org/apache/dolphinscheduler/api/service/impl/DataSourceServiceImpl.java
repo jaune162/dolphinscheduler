@@ -36,6 +36,8 @@ import org.apache.dolphinscheduler.dao.mapper.DataSourceUserMapper;
 import org.apache.dolphinscheduler.plugin.datasource.api.datasource.BaseDataSourceParamDTO;
 import org.apache.dolphinscheduler.plugin.datasource.api.datasource.DataSourceProcessor;
 import org.apache.dolphinscheduler.plugin.datasource.api.utils.DataSourceUtils;
+import org.apache.dolphinscheduler.plugin.datasource.delegate.param.DelegateConnectionParam;
+import org.apache.dolphinscheduler.plugin.datasource.delegate.param.DelegateDataSourceParamDTO;
 import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
 import org.apache.dolphinscheduler.spi.datasource.ConnectionParam;
 import org.apache.dolphinscheduler.spi.enums.DbType;
@@ -107,7 +109,14 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
         if (checkDescriptionLength(datasourceParam.getNote())) {
             throw new ServiceException(Status.DESCRIPTION_TOO_LONG_ERROR);
         }
-        ConnectionParam connectionParam = DataSourceUtils.buildConnectionParams(datasourceParam);
+        ConnectionParam connectionParam;
+
+        // Do not check delegate datasource connection params
+        if (datasourceParam instanceof DelegateDataSourceParamDTO) {
+            connectionParam = createDelegateConnectionParam((DelegateDataSourceParamDTO) datasourceParam);
+        } else {
+            connectionParam = DataSourceUtils.buildConnectionParams(datasourceParam);
+        }
 
         // build datasource
         DataSource dataSource = new DataSource();
@@ -157,15 +166,22 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
             throw new ServiceException(Status.DESCRIPTION_TOO_LONG_ERROR);
         }
         // check password，if the password is not updated, set to the old password.
-        ConnectionParam connectionParam = DataSourceUtils.buildConnectionParams(dataSourceParam);
+        ConnectionParam connectionParam;
+        // Do not check delegate datasource connection params
+        if (dataSourceParam instanceof DelegateDataSourceParamDTO) {
+            connectionParam = createDelegateConnectionParam((DelegateDataSourceParamDTO) dataSourceParam);
+        } else {
+            connectionParam = DataSourceUtils.buildConnectionParams(dataSourceParam);
 
-        String password = connectionParam.getPassword();
+            String password = connectionParam.getPassword();
 
-        if (StringUtils.isBlank(password)) {
-            String oldConnectionParams = dataSource.getConnectionParams();
-            ObjectNode oldParams = JSONUtils.parseObject(oldConnectionParams);
-            connectionParam.setPassword(oldParams.path(Constants.PASSWORD).asText());
+            if (StringUtils.isBlank(password)) {
+                String oldConnectionParams = dataSource.getConnectionParams();
+                ObjectNode oldParams = JSONUtils.parseObject(oldConnectionParams);
+                connectionParam.setPassword(oldParams.path(Constants.PASSWORD).asText());
+            }
         }
+
 
         Date now = new Date();
 
@@ -181,6 +197,13 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
         } catch (DuplicateKeyException ex) {
             throw new ServiceException(Status.DATASOURCE_EXIST);
         }
+    }
+
+    private DelegateConnectionParam createDelegateConnectionParam(DelegateDataSourceParamDTO  datasourceParam) {
+        DelegateConnectionParam delegateConnectionParam = new DelegateConnectionParam();
+        delegateConnectionParam.setRealDatasource(datasourceParam.getRealDatasource());
+        delegateConnectionParam.setPassword(datasourceParam.getPassword());
+        return delegateConnectionParam;
     }
 
     private boolean checkName(String name) {

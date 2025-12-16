@@ -28,7 +28,7 @@ public class DelegateDataSourceChannelFactory implements DataSourceChannelFactor
 
     @Override
     public String getName() {
-        return DbType.MYSQL.getName();
+        return DbType.DELEGATE.getName();
     }
 
     @Override
