@@ -132,7 +132,7 @@ export function useDataX(model: { [field: string]: any }): IJsonItem[] {
     'DATABEND',
     'HIVE',
     'DELEGATE',
-    'PRESTO'
+    'PRESTO',
   ]
   onMounted(() => {
     initConstants()

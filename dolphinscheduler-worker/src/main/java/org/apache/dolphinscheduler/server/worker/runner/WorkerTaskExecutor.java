@@ -22,6 +22,7 @@ import static org.apache.dolphinscheduler.common.constants.Constants.DRY_RUN_FLA
 import static org.apache.dolphinscheduler.common.constants.Constants.K8S_CONFIG_REGEX;
 import static org.apache.dolphinscheduler.common.constants.Constants.SINGLE_SLASH;
 
+import org.apache.dolphinscheduler.common.context.GlobalParametersContext;
 import org.apache.dolphinscheduler.common.enums.WarningType;
 import org.apache.dolphinscheduler.common.log.SensitiveDataConverter;
 import org.apache.dolphinscheduler.common.log.remote.RemoteLogUtils;
@@ -108,6 +109,7 @@ public abstract class WorkerTaskExecutor implements Runnable {
         log.info("Remove the current task execute context from worker cache");
         clearTaskExecPathIfNeeded();
 
+        GlobalParametersContext.clearParameters();
     }
 
     protected void afterThrowing(Throwable throwable) throws TaskException {
@@ -122,6 +124,7 @@ public abstract class WorkerTaskExecutor implements Runnable {
         log.info("Get a exception when execute the task, will send the task status: {} to master: {}",
                 TaskExecutionStatus.FAILURE.name(), taskExecutionContext.getHost());
 
+        GlobalParametersContext.clearParameters();
     }
 
     protected boolean cancelTask() {
@@ -197,6 +200,8 @@ public abstract class WorkerTaskExecutor implements Runnable {
         log.info("Set task appId: {}", taskAppId);
 
         log.info("End initialize task {}", JSONUtils.toPrettyJsonString(taskExecutionContext));
+
+        GlobalParametersContext.setParameters(taskExecutionContext.getGlobalParams());
     }
 
     protected void beforeExecute() {

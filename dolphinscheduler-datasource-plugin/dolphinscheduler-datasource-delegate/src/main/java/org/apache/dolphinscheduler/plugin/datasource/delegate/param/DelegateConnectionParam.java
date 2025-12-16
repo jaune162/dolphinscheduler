@@ -24,6 +24,7 @@ import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
 @EqualsAndHashCode(callSuper = true)
 @Data
 public class DelegateConnectionParam extends BaseConnectionParam {
+
     private String realDatasource;
 
 }

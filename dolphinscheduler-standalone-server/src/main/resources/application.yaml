@@ -17,7 +17,7 @@
 
 spring:
   profiles:
-    active: h2
+    active: mysql
   jackson:
     time-zone: UTC
     date-format: "yyyy-MM-dd HH:mm:ss"
@@ -334,6 +334,6 @@ spring:
        schema-locations: classpath:sql/dolphinscheduler_mysql.sql
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/dolphinscheduler?useUnicode=true&characterEncoding=UTF-8
-    username: root
-    password: root
+    url: jdbc:mysql://10.16.10.102:3306/dolphin32tst?useUnicode=true&characterEncoding=UTF-8
+    username: dolphin32
+    password: ds33123
