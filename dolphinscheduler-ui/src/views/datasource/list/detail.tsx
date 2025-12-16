@@ -161,6 +161,9 @@ const DetailModal = defineComponent({
       showPrincipal,
       showMode,
       showDataBaseName,
+      showUserName,
+      showPassword,
+      showRealDatasource,
       showJDBCConnectParameters,
       showPublicKey,
       modeOptions,
@@ -543,6 +546,7 @@ const DetailModal = defineComponent({
                 </NFormItem>
                 <NFormItem
                   label={t('datasource.user_name')}
+                  v-show={showUserName}
                   path='userName'
                   show-require-mark
                 >
@@ -556,6 +560,7 @@ const DetailModal = defineComponent({
                   />
                 </NFormItem>
                 <NFormItem
+                  v-show={showPassword}
                   label={t('datasource.user_password')}
                   path='password'
                 >
@@ -565,6 +570,18 @@ const DetailModal = defineComponent({
                     v-model={[detailForm.password, 'value']}
                     type='password'
                     placeholder={t('datasource.user_password_tips')}
+                  />
+                </NFormItem>
+                <NFormItem
+                    v-show={showRealDatasource}
+                    label={t('datasource.delegate_real_datasource')}
+                    path='realDatasource'
+                >
+                  <NInput
+                      allowInput={this.trim}
+                      class='input-password'
+                      v-model={[detailForm.realDatasource, 'value']}
+                      placeholder={t('datasource.delegate_real_datasource')}
                   />
                 </NFormItem>
                 <NFormItem

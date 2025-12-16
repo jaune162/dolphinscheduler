@@ -41,6 +41,7 @@ type IDataBase =
   | 'KYUUBI'
   | 'ZEPPELIN'
   | 'SAGEMAKER'
+  | 'DELEGATE'
 
 type IDataBaseLabel =
   | 'MYSQL'
@@ -63,6 +64,7 @@ type IDataBaseLabel =
   | 'KYUUBI'
   | 'ZEPPELIN'
   | 'SAGEMAKER'
+  | 'DELEGATE'
 
 interface IDataSource {
   id?: number
@@ -90,6 +92,7 @@ interface IDataSource {
   compatibleMode?: string
   publicKey?: string
   datawarehouse?: string
+  realDatasource?: string
 }
 
 interface ListReq {

@@ -93,6 +93,7 @@ export default {
   dbUser: 'DbUser',
   dbUser_tips: 'Please input DbUser',
   zeppelin_rest_endpoint: 'zeppelinRestEndpoint',
+  delegate_real_datasource: 'Real Datasource Name',
   zeppelin_rest_endpoint_tips: 'Please input zeppelin restEndpoint',
   kubeConfig: 'kubeConfig',
   kubeConfig_tips: 'Please input KubeConfig',

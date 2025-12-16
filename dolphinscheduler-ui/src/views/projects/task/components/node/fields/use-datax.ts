@@ -131,6 +131,7 @@ export function useDataX(model: { [field: string]: any }): IJsonItem[] {
     'CLICKHOUSE',
     'DATABEND',
     'HIVE',
+    'DELEGATE',
     'PRESTO'
   ]
   onMounted(() => {

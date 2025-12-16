@@ -24,7 +24,7 @@ const components: { [key: string]: Component } = utils.mapping(modules)
 
 export default {
   path: '/ui-setting',
-  name: 'ui-setting',
+  name: 'ui-setting-1',
   meta: { title: '设置' },
   component: () => import('@/layouts/content'),
   children: [

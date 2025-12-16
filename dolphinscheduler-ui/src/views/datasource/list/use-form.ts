@@ -60,6 +60,9 @@ export function useForm(id?: number) {
     requiredDataBase: true,
     showHost: true,
     showPort: true,
+    showUserName: true,
+    showPassword: true,
+    showRealDatasource: false,
     showAwsRegion: false,
     showRestEndpoint: false,
     showCompatibleMode: false,
@@ -261,7 +264,7 @@ export function useForm(id?: number) {
     } else {
       state.showPrincipal = false
     }
-    if (type === 'SSH' || type === 'ZEPPELIN' || type === 'SAGEMAKER') {
+    if (type === 'SSH' || type === 'ZEPPELIN' || type === 'SAGEMAKER' || type === 'DELEGATE') {
       state.showDataBaseName = false
       state.requiredDataBase = false
       state.showJDBCConnectParameters = false
@@ -277,6 +280,13 @@ export function useForm(id?: number) {
       if (type === 'SAGEMAKER') {
         state.showHost = false
         state.showPort = false
+      }
+      if (type === 'DELEGATE') {
+        state.showHost = false
+        state.showPort = false
+        state.showUserName = false
+        state.showPassword = false
+        state.showRealDatasource = true
       }
     } else {
       state.showDataBaseName = true
@@ -440,6 +450,11 @@ export const datasourceType: IDataBaseOptionKeys = {
   SAGEMAKER: {
     value: 'SAGEMAKER',
     label: 'SAGEMAKER',
+    defaultPort: 0
+  },
+  DELEGATE: {
+    value: 'DELEGATE',
+    label: 'DELEGATE',
     defaultPort: 0
   }
 }
