@@ -284,7 +284,7 @@ public abstract class AbstractCommandExecutor {
             taskOutputParams = taskOutputParameterParser.getTaskOutputParams();
         });
 
-        getOutputLogService.shutdown();
+        //getOutputLogService.shutdown();
 
         ExecutorService parseProcessOutputExecutorService = ThreadUtils
                 .newSingleDaemonScheduledExecutorService("TaskInstanceLogOutput-thread-" + taskRequest.getTaskName());
@@ -306,6 +306,13 @@ public abstract class AbstractCommandExecutor {
                 LogUtils.removeTaskInstanceLogFullPathMDC();
             }
         });
+        try {
+            getOutputLogService.awaitTermination(60, TimeUnit.SECONDS);
+            parseProcessOutputExecutorService.awaitTermination(60, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        getOutputLogService.shutdown();
         parseProcessOutputExecutorService.shutdown();
     }
 
