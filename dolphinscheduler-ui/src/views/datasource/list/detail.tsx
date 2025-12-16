@@ -576,6 +576,7 @@ const DetailModal = defineComponent({
                     v-show={showRealDatasource}
                     label={t('datasource.delegate_real_datasource')}
                     path='realDatasource'
+                    show-require-mark
                 >
                   <NInput
                       allowInput={this.trim}

@@ -251,7 +251,8 @@ export function useForm(id?: number) {
     state.showPort = type !== 'ATHENA'
     state.showAwsRegion = type === 'ATHENA' || type === 'SAGEMAKER'
     state.showMode = ['AZURESQL', 'REDSHIFT', 'SAGEMAKER'].includes(type)
-
+    state.showRealDatasource = type === 'DELEGATE'
+    state.showRestEndpoint = type === 'ZEPPELIN'
     if (type === 'ORACLE' && !id) {
       state.detailForm.connectType = 'ORACLE_SERVICE_NAME'
     }
@@ -275,7 +276,6 @@ export function useForm(id?: number) {
       if (type === 'ZEPPELIN') {
         state.showHost = false
         state.showPort = false
-        state.showRestEndpoint = true
       }
       if (type === 'SAGEMAKER') {
         state.showHost = false
@@ -286,7 +286,6 @@ export function useForm(id?: number) {
         state.showPort = false
         state.showUserName = false
         state.showPassword = false
-        state.showRealDatasource = true
       }
     } else {
       state.showDataBaseName = true

@@ -89,7 +89,7 @@ export default {
   SecretAccessKey_tips: '请输入SecretAccessKey',
   dbUser: 'DbUser',
   dbUser_tips: '请输入DbUser',
-  zeppelin_rest_endpoint: 'zeppelinRestEndpoint',
+  zeppelin_rest_endpoint: 'Zeppelin RestEndpoint',
   zeppelin_rest_endpoint_tips: '请输入zeppelin server的rest endpoint',
   delegate_real_datasource: '真实数据源名称',
   kubeConfig: 'kubeConfig',
