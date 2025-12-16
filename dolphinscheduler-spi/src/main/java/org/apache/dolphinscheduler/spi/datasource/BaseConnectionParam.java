@@ -23,6 +23,7 @@ import lombok.Data;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import org.apache.dolphinscheduler.spi.enums.DbType;
 
 @Data
 @JsonInclude(Include.NON_NULL)
@@ -45,5 +46,7 @@ public abstract class BaseConnectionParam implements ConnectionParam {
     protected String validationQuery;
 
     protected Map<String, String> other;
+
+    protected DbType dbType;
 
 }
