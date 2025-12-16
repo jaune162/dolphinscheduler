@@ -54,6 +54,7 @@ public enum DbType {
     DORIS(23, "doris", "doris"),
     ZEPPELIN(24, "zeppelin", "zeppelin"),
     SAGEMAKER(25, "sagemaker", "sagemaker"),
+    DELEGATE(26, "delegate", "delegate to another datasource"),
     ;
     private static final Map<Integer, DbType> DB_TYPE_MAP =
             Arrays.stream(DbType.values()).collect(toMap(DbType::getCode, Functions.identity()));
