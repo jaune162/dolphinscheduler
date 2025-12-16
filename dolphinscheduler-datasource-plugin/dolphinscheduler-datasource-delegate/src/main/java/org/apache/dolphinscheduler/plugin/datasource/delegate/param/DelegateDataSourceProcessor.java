@@ -17,8 +17,9 @@
 
 package org.apache.dolphinscheduler.plugin.datasource.delegate.param;
 
-import org.apache.dolphinscheduler.common.constants.Constants;
-import org.apache.dolphinscheduler.common.constants.DataSourceConstants;
+import com.google.auto.service.AutoService;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
 import org.apache.dolphinscheduler.dao.entity.DataSource;
 import org.apache.dolphinscheduler.dao.mapper.DataSourceMapper;
@@ -27,26 +28,14 @@ import org.apache.dolphinscheduler.plugin.datasource.api.datasource.BaseDataSour
 import org.apache.dolphinscheduler.plugin.datasource.api.datasource.DataSourceProcessor;
 import org.apache.dolphinscheduler.plugin.datasource.api.plugin.DataSourceProcessorProvider;
 import org.apache.dolphinscheduler.plugin.datasource.api.utils.DataSourceUtils;
-import org.apache.dolphinscheduler.plugin.datasource.api.utils.PasswordUtils;
 import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
 import org.apache.dolphinscheduler.spi.datasource.ConnectionParam;
 import org.apache.dolphinscheduler.spi.enums.DbType;
 
-import org.apache.commons.collections4.MapUtils;
-
 import java.io.IOException;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-
-import lombok.extern.slf4j.Slf4j;
-
-import com.alibaba.druid.sql.parser.SQLParserUtils;
-import com.google.auto.service.AutoService;
 
 @AutoService(DataSourceProcessor.class)
 @Slf4j
@@ -86,6 +75,7 @@ public class DelegateDataSourceProcessor extends AbstractDataSourceProcessor {
         if (realDatasource.matches("^\\$\\{.+\\}")) {
             //resolve var
         }
+
         List<DataSource> dataSources = dataSourceMapper.queryDataSourceByName(realDatasource);
         if (dataSources == null || dataSources.isEmpty()) {
             throw new RuntimeException("datasource not found:" + realDatasource);
@@ -144,5 +134,11 @@ public class DelegateDataSourceProcessor extends AbstractDataSourceProcessor {
     public List<String> splitAndRemoveComment(String sql) {
         return dataSourceProcessor.splitAndRemoveComment(sql);
     }
-
+    @Override
+    public void checkDatasourceParam(BaseDataSourceParamDTO datasourceParamDTO) {
+        DelegateDataSourceParamDTO dlgDataSourceParamDTO = (DelegateDataSourceParamDTO) datasourceParamDTO;
+        if (StringUtils.isEmpty(dlgDataSourceParamDTO.getRealDatasource())) {
+            throw new IllegalArgumentException("delegate datasource param is not valid");
+        }
+    }
 }
