@@ -168,6 +168,7 @@ public class CommandServiceImpl implements CommandService {
                     processInstance.getId(),
                     processInstance.getProcessDefinitionVersion(),
                     processInstance.getTestFlag());
+            command.setTenantCode(processInstance.getTenantCode());
             upsertCommand(command);
             return;
         }
@@ -229,7 +230,7 @@ public class CommandServiceImpl implements CommandService {
         String processParam = ParamUtils.getSubWorkFlowParam(instanceMap, parentProcessInstance, fatherParams);
         int subProcessInstanceId =
                 childInstance == null ? 0 : (childInstance.getId() == null ? 0 : childInstance.getId());
-        return new Command(
+        Command command = new Command(
                 commandType,
                 TaskDependType.TASK_POST,
                 parentProcessInstance.getFailureStrategy(),
@@ -246,6 +247,8 @@ public class CommandServiceImpl implements CommandService {
                 subProcessInstanceId,
                 subProcessDefinition.getVersion(),
                 parentProcessInstance.getTestFlag());
+        command.setTenantCode(parentProcessInstance.getTenantCode());
+        return command;
     }
 
     /**
