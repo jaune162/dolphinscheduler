@@ -284,7 +284,7 @@ public abstract class AbstractCommandExecutor {
             taskOutputParams = taskOutputParameterParser.getTaskOutputParams();
         });
 
-        //getOutputLogService.shutdown();
+        // getOutputLogService.shutdown();
 
         ExecutorService parseProcessOutputExecutorService = ThreadUtils
                 .newSingleDaemonScheduledExecutorService("TaskInstanceLogOutput-thread-" + taskRequest.getTaskName());

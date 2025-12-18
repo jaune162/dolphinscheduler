@@ -37,6 +37,7 @@ public class DelegateDataSourceChannelTest {
         DelegatePooledDataSourceClient dataSourceClient = Mockito.mock(DelegatePooledDataSourceClient.class);
         Mockito.when(sourceChannel.createPooledDataSourceClient(Mockito.any(), Mockito.any()))
                 .thenReturn(dataSourceClient);
-        Assertions.assertNotNull(sourceChannel.createPooledDataSourceClient(new DelegateConnectionParam(), DbType.MYSQL));
+        Assertions
+                .assertNotNull(sourceChannel.createPooledDataSourceClient(new DelegateConnectionParam(), DbType.MYSQL));
     }
 }

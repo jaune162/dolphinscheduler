@@ -17,9 +17,10 @@
 
 package org.apache.dolphinscheduler.plugin.datasource.delegate.param;
 
+import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
 
 @EqualsAndHashCode(callSuper = true)
 @Data

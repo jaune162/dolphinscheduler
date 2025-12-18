@@ -17,9 +17,6 @@
 
 package org.apache.dolphinscheduler.plugin.datasource.delegate.param;
 
-import com.google.auto.service.AutoService;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.dolphinscheduler.common.context.GlobalParametersContext;
 import org.apache.dolphinscheduler.common.utils.ApplicationContextUtils;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
@@ -33,6 +30,16 @@ import org.apache.dolphinscheduler.plugin.datasource.api.utils.DataSourceUtils;
 import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
 import org.apache.dolphinscheduler.spi.datasource.ConnectionParam;
 import org.apache.dolphinscheduler.spi.enums.DbType;
+
+import org.apache.commons.lang3.StringUtils;
+
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.List;
+
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.BeanInitializationException;
 import org.springframework.context.expression.MapAccessor;
 import org.springframework.expression.Expression;
@@ -41,10 +48,7 @@ import org.springframework.expression.common.TemplateParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
-import java.io.IOException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.List;
+import com.google.auto.service.AutoService;
 
 @AutoService(DataSourceProcessor.class)
 @Slf4j
@@ -87,15 +91,17 @@ public class DelegateDataSourceProcessor extends AbstractDataSourceProcessor {
         }
         DataSource dataSource = dataSources.get(0);
 
-        BaseConnectionParam baseConnectionParam = (BaseConnectionParam) DataSourceUtils.buildConnectionParams(dataSource.getType(),
-                dataSource.getConnectionParams());
+        BaseConnectionParam baseConnectionParam =
+                (BaseConnectionParam) DataSourceUtils.buildConnectionParams(dataSource.getType(),
+                        dataSource.getConnectionParams());
         baseConnectionParam.setDbType(dataSource.getType());
         return baseConnectionParam;
     }
 
     @Override
     public ConnectionParam createConnectionParams(String connectionJson) {
-        DelegateConnectionParam delegateConnectionParam = JSONUtils.parseObject(connectionJson, DelegateConnectionParam.class);
+        DelegateConnectionParam delegateConnectionParam =
+                JSONUtils.parseObject(connectionJson, DelegateConnectionParam.class);
         return toRealConnectionParam(delegateConnectionParam.getRealDatasource());
     }
 
@@ -109,10 +115,9 @@ public class DelegateDataSourceProcessor extends AbstractDataSourceProcessor {
         return null;
     }
 
-
     private String resolveRealDatasourceName(String realDatasource) {
         if (realDatasource.matches("^\\$\\{.+\\}")) {
-            //resolve var
+            // resolve var
             TemplateParserContext parserContext = new TemplateParserContext("${", "}");
 
             ExpressionParser parser = new SpelExpressionParser();
@@ -138,7 +143,8 @@ public class DelegateDataSourceProcessor extends AbstractDataSourceProcessor {
     public Connection getConnection(ConnectionParam connectionParam) throws ClassNotFoundException, SQLException, IOException {
         if (connectionParam instanceof BaseConnectionParam) {
             BaseConnectionParam baseConnectionParam = (BaseConnectionParam) connectionParam;
-            DataSourceProcessor dataSourceProcessor = DataSourceProcessorProvider.getDataSourceProcessor(baseConnectionParam.getDbType());
+            DataSourceProcessor dataSourceProcessor =
+                    DataSourceProcessorProvider.getDataSourceProcessor(baseConnectionParam.getDbType());
             return dataSourceProcessor.getConnection(connectionParam);
         }
         throw new RuntimeException("invalid connection parameter");

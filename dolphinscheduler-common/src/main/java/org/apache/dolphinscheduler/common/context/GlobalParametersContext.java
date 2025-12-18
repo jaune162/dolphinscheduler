@@ -1,7 +1,5 @@
 package org.apache.dolphinscheduler.common.context;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
 
 import java.util.Collections;
@@ -9,6 +7,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import lombok.extern.slf4j.Slf4j;
+
+import com.fasterxml.jackson.core.type.TypeReference;
 
 @Slf4j
 public class GlobalParametersContext {
@@ -46,7 +48,6 @@ public class GlobalParametersContext {
             return Collections.emptyMap();
         }
         return globalParameters.stream().collect(Collectors.toMap(
-                GlobalParameters::getProp, GlobalParameters::getValue
-        ));
+                GlobalParameters::getProp, GlobalParameters::getValue));
     }
 }

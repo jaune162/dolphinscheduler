@@ -17,13 +17,14 @@
 
 package org.apache.dolphinscheduler.spi.datasource;
 
+import org.apache.dolphinscheduler.spi.enums.DbType;
+
 import java.util.Map;
 
 import lombok.Data;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import org.apache.dolphinscheduler.spi.enums.DbType;
 
 @Data
 @JsonInclude(Include.NON_NULL)

@@ -182,7 +182,6 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
             }
         }
 
-
         Date now = new Date();
 
         dataSource.setName(dataSourceParam.getName().trim());
@@ -199,7 +198,7 @@ public class DataSourceServiceImpl extends BaseServiceImpl implements DataSource
         }
     }
 
-    private DelegateConnectionParam createDelegateConnectionParam(DelegateDataSourceParamDTO  datasourceParam) {
+    private DelegateConnectionParam createDelegateConnectionParam(DelegateDataSourceParamDTO datasourceParam) {
         DelegateConnectionParam delegateConnectionParam = new DelegateConnectionParam();
         delegateConnectionParam.setRealDatasource(datasourceParam.getRealDatasource());
         delegateConnectionParam.setPassword(datasourceParam.getPassword());

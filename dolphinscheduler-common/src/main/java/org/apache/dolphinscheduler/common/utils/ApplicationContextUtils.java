@@ -1,6 +1,7 @@
 package org.apache.dolphinscheduler.common.utils;
 
 import lombok.Getter;
+
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
