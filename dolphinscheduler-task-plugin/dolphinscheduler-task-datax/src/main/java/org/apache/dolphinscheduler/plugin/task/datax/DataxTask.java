@@ -159,7 +159,6 @@ public class DataxTask extends AbstractTask {
                     .appendScript(buildCommand(buildDataxJsonFile(paramsMap), paramsMap));
 
             TaskResponse commandExecuteResult = shellCommandExecutor.run(shellActuatorBuilder, taskCallBack);
-
             setExitStatusCode(commandExecuteResult.getExitStatusCode());
             setProcessId(commandExecuteResult.getProcessId());
             //setExitStatusCode(0);
