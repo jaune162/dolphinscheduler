@@ -4,24 +4,37 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dolphinscheduler.common.utils.JSONUtils;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Slf4j
 public class GlobalParametersContext {
 
-    private final static ThreadLocal<List<GlobalParameters>> parameters = new InheritableThreadLocal<>();
+    private final static ThreadLocal<Map<String, Object>> parameters = new InheritableThreadLocal<>();
+
+    private static void initParameters() {
+        if (parameters.get() == null) {
+            parameters.set(new HashMap<>());
+        }
+    }
+
+    public static void setParameters(Map<String, Object> params) {
+        initParameters();
+        parameters.get().putAll(params);
+    }
+
 
     public static void setParameters(String globalParams) {
         TypeReference<List<GlobalParameters>> pType = new TypeReference<List<GlobalParameters>>() {
         };
 
         List<GlobalParameters> globalParameters = JSONUtils.parseObject(globalParams, pType);
-        parameters.set(globalParameters);
-
+        if  (globalParameters == null) {
+            return;
+        }
+        initParameters();
+        for (GlobalParameters globalParameter : globalParameters) {
+            parameters.get().put(globalParameter.getProp(), globalParameter.getValue());
+        }
         log.info("Inject global parameters to ThreadLocal context.");
     }
 
@@ -30,23 +43,10 @@ public class GlobalParametersContext {
         log.info("Remove the global parameters in ThreadLocal context.");
     }
 
-    public static Object getParameter(String parameterName) {
-        List<GlobalParameters> globalParameters = parameters.get();
-        for (GlobalParameters globalParameter : globalParameters) {
-            if (Objects.equals(globalParameter.getProp(), parameterName)) {
-                return globalParameter.getValue();
-            }
-        }
-        return null;
-    }
-
     public static Map<String, Object> getParameters() {
-        List<GlobalParameters> globalParameters = parameters.get();
-        if (globalParameters == null) {
+        if (parameters.get() == null) {
             return Collections.emptyMap();
         }
-        return globalParameters.stream().collect(Collectors.toMap(
-                GlobalParameters::getProp, GlobalParameters::getValue
-        ));
+        return parameters.get();
     }
 }

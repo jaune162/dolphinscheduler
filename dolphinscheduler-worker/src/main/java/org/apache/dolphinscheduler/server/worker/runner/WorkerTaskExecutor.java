@@ -22,6 +22,7 @@ import static org.apache.dolphinscheduler.common.constants.Constants.DRY_RUN_FLA
 import static org.apache.dolphinscheduler.common.constants.Constants.K8S_CONFIG_REGEX;
 import static org.apache.dolphinscheduler.common.constants.Constants.SINGLE_SLASH;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.dolphinscheduler.common.context.GlobalParametersContext;
 import org.apache.dolphinscheduler.common.enums.WarningType;
 import org.apache.dolphinscheduler.common.log.SensitiveDataConverter;
@@ -45,9 +46,11 @@ import org.apache.dolphinscheduler.plugin.task.api.TaskPluginManager;
 import org.apache.dolphinscheduler.plugin.task.api.enums.Direct;
 import org.apache.dolphinscheduler.plugin.task.api.enums.TaskExecutionStatus;
 import org.apache.dolphinscheduler.plugin.task.api.log.TaskInstanceLogHeader;
+import org.apache.dolphinscheduler.plugin.task.api.model.Property;
 import org.apache.dolphinscheduler.plugin.task.api.model.TaskAlertInfo;
 import org.apache.dolphinscheduler.plugin.task.api.resource.ResourceContext;
 import org.apache.dolphinscheduler.plugin.task.api.utils.LogUtils;
+import org.apache.dolphinscheduler.plugin.task.api.utils.MapUtils;
 import org.apache.dolphinscheduler.plugin.task.api.utils.ProcessUtils;
 import org.apache.dolphinscheduler.server.worker.config.WorkerConfig;
 import org.apache.dolphinscheduler.server.worker.registry.WorkerRegistryClient;
@@ -58,6 +61,8 @@ import org.apache.dolphinscheduler.server.worker.utils.TaskFilesTransferUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import javax.annotation.Nullable;
@@ -201,6 +206,18 @@ public abstract class WorkerTaskExecutor implements Runnable {
 
         log.info("End initialize task {}", JSONUtils.toPrettyJsonString(taskExecutionContext));
 
+        Map<String, Property> prepareParamsMap = taskExecutionContext.getPrepareParamsMap();
+        Map<String, Object> params = new HashMap<>();
+        if (MapUtils.isNotEmpty(prepareParamsMap)) {
+            prepareParamsMap.forEach( (key, value) -> {
+                params.put(key, value.getValue());
+            });
+        }
+
+        // 项目级别参数
+        GlobalParametersContext.setParameters(params);
+
+        // 全局参数
         GlobalParametersContext.setParameters(taskExecutionContext.getGlobalParams());
     }
 
