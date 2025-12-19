@@ -61,6 +61,7 @@ import org.apache.dolphinscheduler.plugin.task.spark.SparkParameters;
 import org.apache.dolphinscheduler.server.master.builder.TaskExecutionContextBuilder;
 import org.apache.dolphinscheduler.server.master.config.MasterConfig;
 import org.apache.dolphinscheduler.server.master.exception.TaskExecutionContextCreateException;
+import org.apache.dolphinscheduler.server.master.runner.pre.PreTaskCreationHandler;
 import org.apache.dolphinscheduler.service.expand.CuringParamsService;
 import org.apache.dolphinscheduler.service.process.ProcessService;
 import org.apache.dolphinscheduler.spi.datasource.BaseConnectionParam;
@@ -99,8 +100,23 @@ public class TaskExecutionContextFactory {
     @Autowired
     private HikariDataSource hikariDataSource;
 
+    @Autowired(required = false)
+    private List<PreTaskCreationHandler> preTaskCreationHandlers;
+
     public TaskExecutionContext createTaskExecutionContext(TaskInstance taskInstance) throws TaskExecutionContextCreateException {
         ProcessInstance workflowInstance = taskInstance.getProcessInstance();
+
+        AbstractParameters baseParam = TaskPluginManager.getParameters(ParametersNode.builder()
+                .taskType(taskInstance.getTaskType()).taskParams(taskInstance.getTaskParams()).build());
+        Map<String, Property> propertyMap =
+                curingParamsService.paramParsingPreparation(taskInstance, baseParam, workflowInstance);
+
+        // 任务创建预处理
+        for (PreTaskCreationHandler preTaskCreationHandler : preTaskCreationHandlers) {
+            if (preTaskCreationHandler.isSupport(taskInstance)) {
+                preTaskCreationHandler.preExecute(taskInstance, propertyMap);
+            }
+        }
 
         ResourceParametersHelper resources =
                 Optional.ofNullable(TaskPluginManager.getTaskChannel(taskInstance.getTaskType()))
@@ -110,10 +126,6 @@ public class TaskExecutionContextFactory {
 
         Map<String, Property> businessParamsMap = curingParamsService.preBuildBusinessParams(workflowInstance);
 
-        AbstractParameters baseParam = TaskPluginManager.getParameters(ParametersNode.builder()
-                .taskType(taskInstance.getTaskType()).taskParams(taskInstance.getTaskParams()).build());
-        Map<String, Property> propertyMap =
-                curingParamsService.paramParsingPreparation(taskInstance, baseParam, workflowInstance);
         TaskExecutionContext taskExecutionContext = TaskExecutionContextBuilder.get()
                 .buildWorkflowInstanceHost(masterConfig.getMasterAddress())
                 .buildTaskInstanceRelatedInfo(taskInstance)
