@@ -50,6 +50,7 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 import com.google.auto.service.AutoService;
 
+
 @AutoService(DataSourceProcessor.class)
 @Slf4j
 public class DelegateDataSourceProcessor extends AbstractDataSourceProcessor {
@@ -82,6 +83,9 @@ public class DelegateDataSourceProcessor extends AbstractDataSourceProcessor {
         }
 
         String datasourceName = this.resolveRealDatasourceName(realDatasource);
+
+        log.warn("Don't use DelegateDataSourceProcessor to get a real datasource.");
+        log.warn("DelegateDataSourceProcessor#createConnectionParams is Deprecated. Please use DelegateDataSourcePreTaskCreationHandler to replace datasource info during Task Instance initialization.");
 
         List<DataSource> dataSources = dataSourceMapper.queryDataSourceByName(datasourceName);
         if (dataSources == null || dataSources.isEmpty()) {
