@@ -14,16 +14,72 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+
 spring:
+  profiles:
+    active: mysql
   banner:
     charset: UTF-8
   jackson:
     time-zone: UTC
     date-format: "yyyy-MM-dd HH:mm:ss"
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+  servlet:
+    multipart:
+      max-file-size: 1024MB
+      max-request-size: 1024MB
+  messages:
+    basename: i18n/messages
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://127.0.0.1:5432/dolphinscheduler
+    username: root
+    password: root
+    hikari:
+      connection-test-query: select 1
+      pool-name: DolphinScheduler
+  quartz:
+    auto-startup: false
+    job-store-type: jdbc
+    jdbc:
+      initialize-schema: never
+    properties:
+      org.quartz.jobStore.isClustered: true
+      org.quartz.jobStore.class: org.springframework.scheduling.quartz.LocalDataSourceJobStore
+      org.quartz.scheduler.instanceId: AUTO
+      org.quartz.jobStore.tablePrefix: QRTZ_
+      org.quartz.jobStore.acquireTriggersWithinLock: true
+      org.quartz.scheduler.instanceName: DolphinScheduler
+      org.quartz.threadPool.class: org.apache.dolphinscheduler.scheduler.quartz.QuartzZeroSizeThreadPool
+      org.quartz.jobStore.useProperties: false
+      org.quartz.jobStore.misfireThreshold: 60000
+      org.quartz.scheduler.makeSchedulerThreadDaemon: true
+      org.quartz.jobStore.driverDelegateClass: org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
+      org.quartz.jobStore.clusterCheckinInterval: 5000
+      org.quartz.scheduler.batchTriggerAcquisitionMaxCount: 1
+  mvc:
+    pathmatch:
+      matching-strategy: ANT_PATH_MATCHER
+    static-path-pattern: /static/**
   cloud.discovery.client.composite-indicator.enabled: false
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  packages-to-scan: org.apache.dolphinscheduler.api
+
+# Mybatis-plus configuration, you don't need to change it
+mybatis-plus:
+  mapper-locations: classpath:org/apache/dolphinscheduler/dao/mapper/*Mapper.xml
+  type-aliases-package: org.apache.dolphinscheduler.dao.entity
+  configuration:
+    cache-enabled: false
+    call-setters-on-nulls: true
+    map-underscore-to-camel-case: true
+    jdbc-type-for-null: NULL
+  global-config:
+    db-config:
+      id-type: auto
+    banner: false
 
 registry:
   type: zookeeper
@@ -96,3 +152,24 @@ management:
 
 metrics:
   enabled: true
+
+---
+spring:
+  config:
+    activate:
+      on-profile: mysql
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/dolphinscheduler
+    username: root
+    password: root
+  quartz:
+    properties:
+      org.quartz.jobStore.driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
+
+---
+spring:
+  config:
+    import:
+      - common.properties
+

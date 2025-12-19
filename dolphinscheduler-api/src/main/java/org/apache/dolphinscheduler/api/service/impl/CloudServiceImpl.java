@@ -38,7 +38,7 @@ import com.azure.resourcemanager.datafactory.models.Factories;
 import com.azure.resourcemanager.datafactory.models.PipelineResource;
 import com.azure.resourcemanager.resources.models.ResourceGroups;
 
-@Service
+//@Service
 public class CloudServiceImpl extends BaseServiceImpl implements CloudService {
 
     private static final String AZURE_CLIENT_ID = PropertyUtils.getString(TaskConstants.AZURE_CLIENT_ID);

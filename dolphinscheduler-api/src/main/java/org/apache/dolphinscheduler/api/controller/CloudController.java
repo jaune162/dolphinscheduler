@@ -48,7 +48,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  * cloud controller
  */
 @Tag(name = "CLOUD_TAG")
-@RestController
+//@RestController
 @RequestMapping("/cloud")
 public class CloudController extends BaseController {
 
