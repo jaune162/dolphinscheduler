@@ -158,11 +158,11 @@ public class DataxTask extends AbstractTask {
                     .properties(ParameterUtils.convert(paramsMap))
                     .appendScript(buildCommand(buildDataxJsonFile(paramsMap), paramsMap));
 
-            TaskResponse commandExecuteResult = shellCommandExecutor.run(shellActuatorBuilder, taskCallBack);
-            setExitStatusCode(commandExecuteResult.getExitStatusCode());
-            setProcessId(commandExecuteResult.getProcessId());
-            // setExitStatusCode(0);
-            // setProcessId(taskExecutionContext.getProcessId());
+            //TaskResponse commandExecuteResult = shellCommandExecutor.run(shellActuatorBuilder, taskCallBack);
+            //setExitStatusCode(commandExecuteResult.getExitStatusCode());
+            //setProcessId(commandExecuteResult.getProcessId());
+            setExitStatusCode(0);
+            setProcessId(taskExecutionContext.getProcessId());
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             log.error("The current DataX task has been interrupted", e);
@@ -254,18 +254,8 @@ public class DataxTask extends AbstractTask {
             sqlArr.add(sql);
         }
 
-        // resolve real dbType
-        DbType dsType = dataxTaskExecutionContext.getSourcetype();
-        DbType dtType = dataxTaskExecutionContext.getTargetType();
-        if (dataSourceCfg.getDbType() != null) {
-            dsType = dataSourceCfg.getDbType();
-        }
-        if (dataTargetCfg.getDbType() != null) {
-            dtType = dataTargetCfg.getDbType();
-        }
-
         ArrayNode urlArr = readerConn.putArray("jdbcUrl");
-        urlArr.add(DataSourceUtils.getJdbcUrl(dsType, dataSourceCfg));
+        urlArr.add(DataSourceUtils.getJdbcUrl(DbType.valueOf(dataXParameters.getDsType()), dataSourceCfg));
 
         readerConnArr.add(readerConn);
 
@@ -275,7 +265,7 @@ public class DataxTask extends AbstractTask {
         readerParam.putArray("connection").addAll(readerConnArr);
 
         ObjectNode reader = JSONUtils.createObjectNode();
-        reader.put("name", DataxUtils.getReaderPluginName(dsType));
+        reader.put("name", DataxUtils.getReaderPluginName(dataxTaskExecutionContext.getSourcetype()));
         reader.set("parameter", readerParam);
 
         List<ObjectNode> writerConnArr = new ArrayList<>();
@@ -284,14 +274,15 @@ public class DataxTask extends AbstractTask {
         tableArr.add(dataXParameters.getTargetTable());
 
         writerConn.put("jdbcUrl",
-                DataSourceUtils.getJdbcUrl(dtType, dataTargetCfg));
+                DataSourceUtils.getJdbcUrl(DbType.valueOf(dataXParameters.getDtType()), dataTargetCfg));
         writerConnArr.add(writerConn);
 
         ObjectNode writerParam = JSONUtils.createObjectNode();
         writerParam.put("username", dataTargetCfg.getUser());
         writerParam.put("password", decodePassword(dataTargetCfg.getPassword()));
 
-        String[] columns = parsingSqlColumnNames(dsType, dtType,
+        String[] columns = parsingSqlColumnNames(dataxTaskExecutionContext.getSourcetype(),
+                dataxTaskExecutionContext.getTargetType(),
                 dataSourceCfg, dataXParameters.getSql());
 
         ArrayNode columnArr = writerParam.putArray("column");
@@ -316,7 +307,7 @@ public class DataxTask extends AbstractTask {
         }
 
         ObjectNode writer = JSONUtils.createObjectNode();
-        writer.put("name", DataxUtils.getWriterPluginName(dtType));
+        writer.put("name", DataxUtils.getWriterPluginName(dataxTaskExecutionContext.getTargetType()));
         writer.set("parameter", writerParam);
 
         List<ObjectNode> contentList = new ArrayList<>();

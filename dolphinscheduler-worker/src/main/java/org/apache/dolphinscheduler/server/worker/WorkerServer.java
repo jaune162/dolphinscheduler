@@ -56,7 +56,6 @@ import org.springframework.context.annotation.Import;
 @Slf4j
 @Import({CommonConfiguration.class,
         StorageConfiguration.class,
-        DaoConfiguration.class,
         RegistryConfiguration.class})
 @SpringBootApplication
 public class WorkerServer implements IStoppable {
