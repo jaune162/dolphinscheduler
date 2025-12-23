@@ -100,6 +100,7 @@ public class CommandServiceImpl implements CommandService {
         }
         command.setCommandParam(JSONUtils.toJsonString(commandParams));
         command.setId(null);
+        log.info("Command create params: {}", command.getCommandParam());
         result = commandMapper.insert(command);
         return result;
     }
